@@ -9,7 +9,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft, Save, Send, CheckCircle2, RotateCcw, Loader2, Download,
-  Clock, AlertCircle, FileText, ShieldCheck, PenTool, Mail, Pencil, RefreshCw, ExternalLink, Lock,
+  Clock, AlertCircle, FileText, ShieldCheck, PenTool, Mail, Pencil, RefreshCw, ExternalLink, Lock, Globe, Monitor, Smartphone, UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
+import { AddPersonnelDialog } from "@/components/users/AddPersonnelDialog";
 import { ConfigForm } from "@/components/onboarding/ConfigForm";
 import { SchemaEditor } from "@/components/onboarding/SchemaEditor";
 import { DocumentPreview } from "@/components/onboarding/DocumentPreview";
@@ -28,7 +29,8 @@ import { buildTemplateData } from "@/lib/onboarding/templateData";
 import { STATUS_META, type ConfigCategory, type OnboardingConfig, type OnboardingPacket, type OnboardingStatus } from "@/lib/onboarding/types";
 
 const CANDIDATE_DOC_LABELS: Record<string, string> = {
-  face_photo: "Passport-size Photo",
+  profile_photo: "Profile Photo (for ID Card)",
+  face_photo: "Face Verification Selfie",
   aadhaar: "Aadhaar Card",
   pan: "PAN Card",
   other: "Supporting Document",
@@ -40,6 +42,24 @@ interface FormState {
   candidate_phone: string;
   candidate_address: string;
   config: OnboardingConfig;
+}
+
+function parseUA(ua: string): { os: string; browser: string; mobile: boolean } {
+  const mobile = /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
+  let os = "Unknown OS";
+  if (/iPhone|iPad|iPod/i.test(ua)) os = /iPad/i.test(ua) ? "iPad" : "iPhone";
+  else if (/Android/i.test(ua)) os = "Android";
+  else if (/Windows NT 1[01]/i.test(ua)) os = "Windows 10/11";
+  else if (/Windows/i.test(ua)) os = "Windows";
+  else if (/Mac OS X/i.test(ua)) os = "macOS";
+  else if (/Linux/i.test(ua)) os = "Linux";
+  let browser = "Unknown Browser";
+  if (/Edg\//i.test(ua)) browser = "Edge";
+  else if (/OPR\/|Opera/i.test(ua)) browser = "Opera";
+  else if (/Chrome\//i.test(ua)) browser = "Chrome";
+  else if (/Firefox\//i.test(ua)) browser = "Firefox";
+  else if (/Safari\//i.test(ua)) browser = "Safari";
+  return { os, browser, mobile };
 }
 
 export default function OnboardingBuilderPage() {
@@ -71,6 +91,9 @@ export default function OnboardingBuilderPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
+
+  // Add Employee from completed onboarding
+  const [addEmpOpen, setAddEmpOpen] = useState(false);
   const formRef = useRef<FormState | null>(null);
 
   const status = packet?.status as OnboardingStatus | undefined;
@@ -220,6 +243,11 @@ export default function OnboardingBuilderPage() {
     toast.success("Accepted — final signed documents emailed to the candidate");
     load(true);
   };
+  const onResend = async () => {
+    await action("send", undefined, "resend");
+    toast.success("E-sign email sent to the candidate");
+    load(true);
+  };
 
   const saveSchema = async () => {
     setSavingSchema(true);
@@ -246,6 +274,8 @@ export default function OnboardingBuilderPage() {
     toast.success("Sent back for changes");
     load(true);
   };
+
+  const openAddEmployee = () => setAddEmpOpen(true);
 
   // Preview reflects ONLY previewForm — frozen until the user clicks "Update Preview".
   const templateData = useMemo(
@@ -318,6 +348,19 @@ export default function OnboardingBuilderPage() {
               {busy === "finalize" ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />} Accept &amp; Send Signed Copy
             </Button>
           )}
+          {/* Retry / re-send the e-sign email. Shows once approved (incl. when the
+              initial send failed and left sent_at empty) and while awaiting signature. */}
+          {(isOwner || isAdmin) && ["approved", "sent", "viewed"].includes(status ?? "") && (
+            <Button
+              variant={packet.sent_at ? "outline" : "default"}
+              size="sm"
+              onClick={onResend}
+              disabled={!!busy}
+            >
+              {busy === "resend" ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}{" "}
+              {packet.sent_at ? "Re-send E-Sign" : "Send E-Sign (retry)"}
+            </Button>
+          )}
           {isAdmin && status === "pending_approval" && (
             <>
               <Button variant="outline" size="sm" onClick={() => setRejectOpen(true)} disabled={!!busy}>
@@ -371,7 +414,71 @@ export default function OnboardingBuilderPage() {
                     </div>
                   </div>
                 ))}
+                {isAdmin && status === "completed" && (
+                  <Button variant="outline" size="sm" onClick={openAddEmployee} className="ml-auto">
+                    <UserPlus size={13} /> Add Employee
+                  </Button>
+                )}
               </div>
+              {packet.signature && (packet.signature.ip || packet.signature.user_agent) && (() => {
+                const parsed = packet.signature.user_agent ? parseUA(packet.signature.user_agent) : null;
+                const DeviceIcon = parsed?.mobile ? Smartphone : Monitor;
+                return (
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-3 pt-3 border-t border-border">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mr-1">E-Sign Details</span>
+                    {packet.signature.ip && (() => {
+                      const ip = packet.signature.ip;
+                      const isLocal = ip === "::1" || ip === "127.0.0.1" || ip.startsWith("::ffff:127.");
+                      return isLocal ? (
+                        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground" title="Localhost — signed from the same machine as the server (dev/testing only)">
+                          <Globe size={10} className="shrink-0" />
+                          <span className="font-medium text-foreground tabular-nums">{ip}</span>
+                          <span className="text-[10px] text-muted-foreground/60">(localhost)</span>
+                        </span>
+                      ) : (
+                        <a
+                          href={`https://ipinfo.io/${ip}`}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors group"
+                          title={`Look up IP ${ip} on ipinfo.io`}
+                        >
+                          <Globe size={10} className="shrink-0" />
+                          <span className="font-medium text-foreground tabular-nums group-hover:underline">{ip}</span>
+                          <ExternalLink size={9} className="opacity-50 group-hover:opacity-100" />
+                        </a>
+                      );
+                    })()}
+                    {parsed && (
+                      <span
+                        className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                        title={packet.signature.user_agent}
+                      >
+                        <DeviceIcon size={10} className="shrink-0" />
+                        <span className="font-medium text-foreground">{parsed.os}</span>
+                        <span>·</span>
+                        <span>{parsed.browser}</span>
+                      </span>
+                    )}
+                    {(() => {
+                      const v: any = packet.signature.verification;
+                      if (!v) return null;
+                      return (
+                        <span
+                          className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                          title={v.device_fp ? `Device fingerprint: ${v.device_fp}` : undefined}
+                        >
+                          <ShieldCheck size={10} className="shrink-0 text-emerald-500" />
+                          <span className="font-medium text-foreground">Identity verified</span>
+                          {v.liveness_pass && <span>· liveness ✓</span>}
+                          {v.ref_present && typeof v.similarity === "number" && <span>· face {Math.round(v.similarity * 100)}%</span>}
+                          {typeof v.risk_score === "number" && <span>· risk {v.risk_score}/{v.risk_max}</span>}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                );
+              })()}
               {(packet.offer_pdf_url || packet.nda_pdf_url || packet.handbook_pdf_url) && (
                 <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
                   {[
@@ -406,14 +513,18 @@ export default function OnboardingBuilderPage() {
                     </Button>
                   </div>
                   {(() => {
-                    const facePhotoUrl = candidateDocs?.find((d: any) => d.document_type === "face_photo")?.url;
-                    return facePhotoUrl ? (
+                    // Display picture = the candidate's profile photo (falls back to
+                    // the verification selfie for candidates who uploaded before it).
+                    const dpUrl =
+                      candidateDocs?.find((d: any) => d.document_type === "profile_photo")?.url ??
+                      candidateDocs?.find((d: any) => d.document_type === "face_photo")?.url;
+                    return dpUrl ? (
                       <div className="flex items-center gap-3">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={facePhotoUrl} alt="" className="h-14 w-14 rounded-full object-cover border border-border flex-shrink-0" />
+                        <img src={dpUrl} alt="" className="h-14 w-14 rounded-full object-cover border border-border flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-foreground truncate">{form.candidate_name || "Candidate"}</p>
-                          <p className="text-[10px] text-muted-foreground">Photo from uploaded documents</p>
+                          <p className="text-[10px] text-muted-foreground">Profile photo from uploaded documents</p>
                         </div>
                       </div>
                     ) : null;
@@ -533,6 +644,21 @@ export default function OnboardingBuilderPage() {
           )}
         </div>
       </div>
+
+      {/* Add Employee — full Add Personnel dialog pre-filled from onboarding */}
+      <AddPersonnelDialog
+        open={addEmpOpen}
+        onOpenChange={setAddEmpOpen}
+        prefill={{
+          name: packet.candidate_name,
+          email: packet.candidate_email,
+          designation: typeof packet.config?.position === "string" ? packet.config.position : "",
+          role: "intern",
+          employment_type: "internship",
+          salary_structure: "stipend",
+        }}
+        onSuccess={() => toast.success(`${packet.candidate_name} added as an employee`)}
+      />
 
       {/* Request changes dialog */}
       <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>

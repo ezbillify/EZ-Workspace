@@ -17,6 +17,7 @@ import {
 import { useAuth } from "./AuthProvider";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
+import { isPayrollInternOnly } from "@/lib/payroll-access";
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
@@ -349,7 +350,7 @@ export function Sidebar() {
   }, [user?.id]);
 
   // ── Permission filtering ──────────────────────────────────
-  const sections: NavSection[] = MASTER_NAV
+  const permSections: NavSection[] = MASTER_NAV
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => {
@@ -360,6 +361,18 @@ export function Sidebar() {
       }),
     }))
     .filter((section) => section.items.length > 0);
+
+  // Payroll-intern accounts see ONLY the internship module — a fixed nav that
+  // bypasses the permission map entirely (payroll_internship has no perm row).
+  const sections: NavSection[] = isPayrollInternOnly(user?.email)
+    ? [{
+        title: "Internship",
+        items: [
+          { href: "/admin/payroll/internship",        label: "Internship Stipend",  icon: IndianRupee,  moduleKey: "payroll_internship" },
+          { href: "/admin/payroll/internship/manage", label: "Holidays & Payments", icon: CalendarDays, moduleKey: "payroll_internship" },
+        ],
+      }]
+    : permSections;
 
   // Restore scroll position
   useEffect(() => {
@@ -532,7 +545,7 @@ export function Sidebar() {
             <div className="flex items-center gap-1.5">
               <p className="text-sm font-medium text-foreground truncate">{user?.name ?? "—"}</p>
             </div>
-            <p className="text-xs text-muted-foreground truncate">{user?.email ?? "—"}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.zoho_email || user?.email || "—"}</p>
           </div>
           <Badge variant="secondary" className={cn("text-[10px] font-medium border", role.className)}>
             {role.label}

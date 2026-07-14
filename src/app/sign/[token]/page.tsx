@@ -11,7 +11,12 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { DocumentPreview } from "@/components/onboarding/DocumentPreview";
 import { SignaturePad } from "@/components/onboarding/SignaturePad";
-import { loadFaceModels, detectFromImage, verifyAgainst, type FaceVerdict } from "@/lib/face-verify-client";
+import { loadFaceModels, detectFromImage, verifyAgainst, assessQuality, type FaceVerdict } from "@/lib/face-verify-client";
+import {
+  loadFaceLandmarker, detectFrame, makeChallengeSequence, newProgress, stepChallenge,
+  scoreRisk, type Challenge, type ChallengeProgress,
+} from "@/lib/liveness-client";
+import { computeDeviceFingerprint } from "@/lib/device-fingerprint";
 import type { TemplateData } from "@/lib/onboarding/types";
 
 type SignState = "ready" | "invalid" | "expired" | "signed" | "error";
@@ -25,6 +30,7 @@ export default function SignPage() {
   const [candidateName, setCandidateName] = useState("");
 
   const [sigImage, setSigImage] = useState<string | null>(null);
+  const [sigEdge, setSigEdge] = useState(false);
   const [typedName, setTypedName] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -40,6 +46,11 @@ export default function SignPage() {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [otpErr, setOtpErr] = useState<string | null>(null);
 
+  // Server-issued proof that OTP + liveness + face all passed. The sign POST
+  // requires it, so the biometric gate can't be skipped by calling the API direct.
+  const [verifyToken, setVerifyToken] = useState<string | null>(null);
+  const deviceFpRef = useRef<string>("unknown");
+
   // Live face verification
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -53,6 +64,30 @@ export default function SignPage() {
   const [faceFails, setFaceFails] = useState(0);
   const [camAttempt, setCamAttempt] = useState(0);
   const [hasMultiCam, setHasMultiCam] = useState(false);
+  // Camera must be started by an explicit tap — some mobile browsers (Samsung
+  // Internet, in-app browsers) only show the permission prompt on a user gesture,
+  // never from a bare useEffect. camLive flips true once the video is playing.
+  const [camStarted, setCamStarted] = useState(false);
+  const [camLive, setCamLive] = useState(false);
+  // Randomized active-liveness challenge sequence (blink / turn / smile)
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [chIdx, setChIdx] = useState(0);
+  const [chCount, setChCount] = useState(0);
+  const [liveDone, setLiveDone] = useState(false);
+  const [centered, setCentered] = useState(false);
+  const progRef = useRef<ChallengeProgress>(newProgress());
+  const idxRef = useRef(0);
+  const doneRef = useRef(false);
+  const challengesRef = useRef<Challenge[]>([]);
+  const rafRef = useRef<number | null>(null);
+  const tsRef = useRef(0);
+
+  // ── Session security ────────────────────────────────────────────────────────
+  // There is deliberately NO time limit — the candidate may take as long as they
+  // need to read the offer, NDA, and handbook. Security comes from the exit guard
+  // below: leaving or switching away from this tab after the OTP resets everything
+  // back to the very start (email OTP + face) so the session can't be handed off.
+  const [sessionMsg, setSessionMsg] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -76,19 +111,27 @@ export default function SignPage() {
     })();
   }, [token]);
 
+  // Compute a device fingerprint once for the audit trail.
+  useEffect(() => { computeDeviceFingerprint().then((fp) => { deviceFpRef.current = fp; }); }, []);
+
   async function submit() {
     setErr(null);
     if (!agreed) return setErr("Please tick the acknowledgement to continue.");
     if (!typedName.trim()) return setErr("Please type your full legal name.");
+    if (!verifyToken) { restartFromOtp("Please verify your identity again before signing."); return; }
     setSubmitting(true);
     try {
       const res = await fetch(`/api/sign/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image_base64: sigImage, typed_name: typedName, agreed }),
+        body: JSON.stringify({ image_base64: sigImage, typed_name: typedName, agreed, verify_token: verifyToken }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to submit");
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Proof missing/expired → send them back through OTP + face.
+        if (res.status === 403) { restartFromOtp("Your verification expired — please verify your email and face again to sign."); return; }
+        throw new Error(json.error || "Failed to submit");
+      }
       setState("signed");
     } catch (e: any) {
       setErr(e.message || "Failed to submit your signature.");
@@ -136,6 +179,11 @@ export default function SignPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Verification failed.");
+      setSessionMsg(null);
+      // Enter the face step. The camera starts on an explicit tap (see the camLive
+      // effect) so the permission prompt reliably appears on every device/browser.
+      setCamStarted(false);
+      setCamLive(false);
       setStep("face");
     } catch (e: any) {
       setOtpErr(e.message || "Verification failed.");
@@ -168,7 +216,7 @@ export default function SignPage() {
       try {
         setFaceStatus("init");
         setFaceMsg("Loading face verification…");
-        await loadFaceModels();
+        await Promise.allSettled([loadFaceModels(), loadFaceLandmarker()]);
         try {
           const img = await loadImageEl(`/api/sign/${token}/profile-photo`);
           const { result } = await detectFromImage(img);
@@ -185,12 +233,15 @@ export default function SignPage() {
     return () => { cancelled = true; };
   }, [step, token]);
 
-  // Camera lifecycle — (re)start on entering the face step, switching camera, or retry.
+  // Camera lifecycle — starts ONLY after the user taps "Enable camera" (camStarted),
+  // so the permission prompt reliably appears on every device/browser. Also re-runs
+  // on flip or retry.
   useEffect(() => {
-    if (step !== "face") { stopStream(); return; }
+    if (step !== "face" || !camStarted) { stopStream(); return; }
     let active = true;
     (async () => {
       setCamError(null);
+      setCamLive(false);
       try {
         stopStream();
         if (!navigator.mediaDevices?.getUserMedia) {
@@ -214,6 +265,8 @@ export default function SignPage() {
           videoRef.current.srcObject = stream;
           await videoRef.current.play().catch(() => {});
         }
+        if (active) setCamLive(true); // video is now live → timer may start
+
         // Show the flip control only when more than one camera exists (mobiles).
         try {
           const devices = await navigator.mediaDevices.enumerateDevices();
@@ -233,7 +286,74 @@ export default function SignPage() {
       }
     })();
     return () => { active = false; stopStream(); };
-  }, [step, facing, camAttempt]);
+  }, [step, facing, camAttempt, camStarted]);
+
+  // Randomized liveness loop: once the camera is live, run a fresh challenge
+  // sequence (blink / turn / smile) via MediaPipe. Capture is gated on completing
+  // it — a photo or replayed clip can't satisfy a random live sequence.
+  useEffect(() => {
+    if (step !== "face" || !camLive) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      return;
+    }
+    const seq = makeChallengeSequence();
+    challengesRef.current = seq; setChallenges(seq);
+    idxRef.current = 0; setChIdx(0);
+    progRef.current = newProgress(); setChCount(0);
+    doneRef.current = false; setLiveDone(false);
+
+    let lastRun = 0;
+    const tick = () => {
+      rafRef.current = requestAnimationFrame(tick);
+      const v = videoRef.current;
+      if (!v || !v.videoWidth) return;
+      const now = performance.now();
+      if (now - lastRun < 66) return; // ~15fps
+      lastRun = now;
+      tsRef.current = Math.max(tsRef.current + 1, Math.round(now));
+      const s = detectFrame(v, tsRef.current);
+      if (s.present && s.faceCount === 1 && s.box) {
+        const cx = s.box.x + s.box.width / 2, cy = s.box.y + s.box.height / 2;
+        setCentered(cx > 0.34 && cx < 0.66 && cy > 0.24 && cy < 0.74 && s.box.width > 0.24 && s.box.width < 0.85);
+      } else setCentered(false);
+      if (doneRef.current || !s.present || s.faceCount !== 1) return;
+      const ch = challengesRef.current[idxRef.current];
+      if (!ch) return;
+      const p = stepChallenge(ch, s, progRef.current);
+      setChCount(p.count);
+      if (p.done) {
+        if (idxRef.current + 1 >= challengesRef.current.length) { doneRef.current = true; setLiveDone(true); }
+        else { idxRef.current += 1; setChIdx(idxRef.current); progRef.current = newProgress(); setChCount(0); }
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); rafRef.current = null; };
+  }, [step, camLive]);
+
+  // Exit guard: once past the OTP gate, switching away from or leaving this tab
+  // (tab switch, minimize, app switch, screen lock, closing the tab) fully resets
+  // the session — the candidate must verify their email AND face again from the
+  // very start. This is the ONLY thing that interrupts signing (no time limit).
+  useEffect(() => {
+    if (step === "gate") return;
+    function onHide() {
+      if (!document.hidden) return;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      setFaceResult(null); setFaceFails(0); setRefMissing(false);
+      setVerifyToken(null);
+      setOtp(""); setOtpSent(false); setSecondsLeft(0);
+      setSigImage(null); setAgreed(false);
+      setStep("gate");
+      setSessionMsg("You left this page — please verify your email and face again to continue signing.");
+    }
+    document.addEventListener("visibilitychange", onHide);
+    return () => document.removeEventListener("visibilitychange", onHide);
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Stop the camera if the component unmounts mid-flow.
+  useEffect(() => () => { streamRef.current?.getTracks().forEach((t) => t.stop()); }, []);
 
   async function captureVerify() {
     const video = videoRef.current;
@@ -247,22 +367,91 @@ export default function SignPage() {
       canvas.height = video.videoHeight;
       canvas.getContext("2d")!.drawImage(video, 0, 0);
       const { faces, result } = await detectFromImage(canvas);
+
       if (!result) {
-        setFaceResult({ pass: false, similarity: 0, distance: 1, checks: [{ label: "Face detected in frame", pass: false }] });
+        setFaceResult({ pass: false, similarity: 0, distance: 1, checks: [{ label: "A face is clearly visible", pass: false }] });
         setFaceStatus("ready");
         setFaceFails((n) => n + 1);
         return;
       }
-      if (refMissing || !refDescRef.current) {
-        stopStream();
-        setStep("sign");
-        return;
-      }
-      const verdict = verifyAgainst(refDescRef.current, result, canvas.width * canvas.height, faces);
-      setFaceResult(verdict);
+
+      // Full quality/anti-spoof suite (single, frontal, size, sharp, no
+      // mask/glasses/hat, plain background) — same checks as the KYC selfie.
+      const q = assessQuality(canvas, result, faces);
+      const qChecks = q.checks.map((c) => ({ label: c.label, pass: c.pass }));
+      const noSun = (q.checks.find((c) => c.key === "noglasses")?.pass ?? true) && (q.checks.find((c) => c.key === "nomask")?.pass ?? true);
+      const hasRef = !(refMissing || !refDescRef.current);
+      const verdict = hasRef ? verifyAgainst(refDescRef.current!, result, canvas.width * canvas.height, faces) : null;
+
+      // Weighted risk score (liveness already completed to reach here).
+      const risk = scoreRisk({
+        faceDetected: true,
+        qualityPass: q.pass,
+        noSunglassesMask: noSun,
+        eyesVisible: q.checks.find((c) => c.key === "eyes")?.pass ?? true,
+        livenessPass: doneRef.current,
+        identityMatch: hasRef ? !!verdict?.pass : null,
+      });
+
+      const checks = hasRef && verdict ? [verdict.checks[0], ...qChecks] : qChecks;
+      checks.push({ label: `Security score ${risk.score}/${risk.max}`, pass: risk.pass });
+      const pass = risk.pass && q.pass && (!hasRef || !!verdict?.pass);
+
+      setFaceResult({ pass, similarity: verdict?.similarity ?? 0, distance: verdict?.distance ?? 1, checks });
       setFaceStatus("ready");
-      if (verdict.pass) {
-        setTimeout(() => { stopStream(); setStep("sign"); }, 900);
+      if (pass) {
+        // Record the evidence server-side and obtain the single-use proof token the
+        // sign POST requires. Only advance to signing once we actually hold it.
+        try {
+          const evidence = {
+            livenessPass: doneRef.current,
+            qualityPass: q.pass,
+            refPresent: hasRef,
+            faceMatched: hasRef ? !!verdict?.pass : null,
+            similarity: verdict?.similarity ?? null,
+            riskScore: risk.score,
+            riskMax: risk.max,
+            deviceFingerprint: deviceFpRef.current,
+            checks,
+          };
+          // Downscaled live frame for the optional face-match worker (true server-side
+          // extraction). Small JPEG (~480px) — processed transiently, never stored.
+          const liveImage = (() => {
+            try {
+              const maxW = 480;
+              const scale = Math.min(1, maxW / canvas.width);
+              const w = Math.round(canvas.width * scale), h = Math.round(canvas.height * scale);
+              const oc = document.createElement("canvas");
+              oc.width = w; oc.height = h;
+              oc.getContext("2d")!.drawImage(canvas, 0, 0, w, h);
+              return oc.toDataURL("image/jpeg", 0.85);
+            } catch { return null; }
+          })();
+          const res = await fetch(`/api/sign/${token}/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              evidence,
+              // Descriptors for the in-app server-side comparison (not stored in
+              // plaintext — reference is AES-encrypted, live is compared then dropped).
+              refDescriptor: refDescRef.current ? Array.from(refDescRef.current) : null,
+              liveDescriptor: result?.descriptor ? Array.from(result.descriptor) : null,
+              // Live image for the worker tier (true server-side extraction), if configured.
+              liveImage,
+            }),
+          });
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok || !json.token) {
+            if (res.status === 403 && json.error === "otp_required") { restartFromOtp("Please verify your email again to continue."); return; }
+            throw new Error(json.message || json.error || "Couldn't record your verification.");
+          }
+          setVerifyToken(json.token);
+          setTimeout(() => { stopStream(); setStep("sign"); }, 800);
+        } catch (e: any) {
+          setFaceResult({ pass: false, similarity: verdict?.similarity ?? 0, distance: verdict?.distance ?? 1, checks: [...checks, { label: "Secure verification recorded", pass: false }] });
+          setFaceMsg(e.message || "Couldn't record your verification — please retry.");
+          setFaceFails((n) => n + 1);
+        }
       } else {
         setFaceFails((n) => n + 1);
       }
@@ -272,14 +461,16 @@ export default function SignPage() {
     }
   }
 
-  function restartFromOtp() {
+  function restartFromOtp(msg?: string) {
     stopStream();
     setFaceResult(null);
     setFaceFails(0);
     setRefMissing(false);
+    setVerifyToken(null);
     setOtp("");
     setOtpSent(false);
     setStep("gate");
+    if (msg) setSessionMsg(msg);
   }
 
   // ── Loading / terminal states ────────────────────────────────────────────
@@ -346,6 +537,13 @@ export default function SignPage() {
         <main className="flex-1 flex items-center justify-center px-4 py-10">
           <Card className="w-full max-w-md">
             <CardContent className="p-6 space-y-5">
+              {sessionMsg && (
+                <div className="flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/5 px-3 py-2.5 text-xs text-rose-600 dark:text-rose-400">
+                  <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+                  <span>{sessionMsg}</span>
+                </div>
+              )}
+
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"><ShieldCheck size={22} /></div>
                 <h1 className="text-lg font-bold text-foreground">Verify it&apos;s you</h1>
@@ -423,18 +621,34 @@ export default function SignPage() {
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary"><ScanFace size={22} /></div>
                 <h1 className="text-lg font-bold text-foreground">Face verification</h1>
-                <p className="text-sm text-muted-foreground">Look into the camera and capture a photo — we&apos;ll match it to your profile photo on file.</p>
+                <p className="text-sm text-muted-foreground">Look into the camera and capture a photo — we&apos;ll match it to your verification selfie on file.</p>
               </div>
 
-              {refMissing ? (
+              {/* Exit-guard notice — no timer; only leaving/switching the tab resets. */}
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400">
+                <ShieldCheck size={13} className="mt-0.5 shrink-0" />
+                <span>Take your time — there&apos;s no countdown. Just keep this tab open: if you switch away or leave the page, you&apos;ll need to verify your email and face again.</span>
+              </div>
+
+              {!camStarted ? (
                 <div className="space-y-3">
-                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
-                    No profile photo is on file for you, so face matching is skipped. You can continue to sign.
+                  <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                    {refMissing
+                      ? "We'll capture a clear, live photo of your face to confirm you're really here before you sign."
+                      : "We'll match a live photo of your face to your verification selfie on file."}{" "}
+                    Tap below and <strong>allow camera access</strong> when your browser asks.
                   </div>
-                  <Button className="w-full" onClick={() => { stopStream(); setStep("sign"); }}>Continue</Button>
+                  <Button className="w-full" onClick={() => { setCamError(null); setCamStarted(true); }}>
+                    <Camera size={15} /> Enable camera
+                  </Button>
                 </div>
               ) : (
                 <>
+                  {refMissing && !faceResult && (
+                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
+                      No profile photo is on file — we'll still confirm a clear, single, live face before you continue.
+                    </div>
+                  )}
                   <div className="relative overflow-hidden rounded-xl border border-border bg-black aspect-[4/3]">
                     <video
                       ref={videoRef}
@@ -444,6 +658,29 @@ export default function SignPage() {
                       className="h-full w-full object-cover"
                       style={{ transform: facing === "user" ? "scaleX(-1)" : undefined }}
                     />
+                    {/* Liveness oval + challenge prompt */}
+                    {faceStatus === "ready" && !faceResult?.pass && (
+                      <>
+                        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-[3px] border-dashed transition-colors"
+                          style={{ width: "54%", height: "82%", borderColor: liveDone ? "#22c55e" : centered ? "#f59e0b" : "#f43f5e" }} />
+                        <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center px-3">
+                          <span className={cn("rounded-full px-2.5 py-0.5 text-center text-[11px] font-medium text-white", liveDone ? "bg-emerald-600/85" : centered ? "bg-amber-600/90" : "bg-rose-600/85")}>
+                            {!centered ? "Center your face in the oval"
+                              : liveDone ? "Liveness confirmed — tap Capture"
+                              : challenges[chIdx]
+                                ? (challenges[chIdx].type === "blink" ? `${challenges[chIdx].label} (${chCount}/${challenges[chIdx].target})` : challenges[chIdx].label)
+                                : "Follow the prompts…"}
+                          </span>
+                        </div>
+                        {challenges.length > 0 && (
+                          <div className="pointer-events-none absolute left-1/2 top-2 flex -translate-x-1/2 gap-1.5">
+                            {challenges.map((_, i) => (
+                              <span key={i} className={cn("h-1.5 w-1.5 rounded-full", i < chIdx || liveDone ? "bg-emerald-400" : i === chIdx ? "bg-amber-400" : "bg-white/40")} />
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
                     {(faceStatus === "init" || faceStatus === "verifying") && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white">
                         <Loader2 className="animate-spin" size={22} />
@@ -495,14 +732,14 @@ export default function SignPage() {
                   {faceResult?.pass ? (
                     <Button className="w-full" disabled><CheckCircle2 size={15} /> Verified — continuing…</Button>
                   ) : (
-                    <Button className="w-full" onClick={captureVerify} disabled={faceStatus !== "ready" || !!camError}>
+                    <Button className="w-full" onClick={captureVerify} disabled={faceStatus !== "ready" || !!camError || (!liveDone && !faceResult)}>
                       {faceStatus === "verifying" ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
-                      {faceResult ? "Retry capture" : "Capture & verify"}
+                      {faceStatus !== "ready" ? "Loading…" : !liveDone && !faceResult ? "Complete the liveness steps…" : faceResult ? "Retry capture" : "Capture & verify"}
                     </Button>
                   )}
 
                   {faceFails >= 2 && !faceResult?.pass && (
-                    <Button variant="ghost" size="sm" className="w-full text-xs" onClick={restartFromOtp}>
+                    <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => restartFromOtp()}>
                       <RotateCcw size={12} /> Start over from email verification
                     </Button>
                   )}
@@ -563,7 +800,7 @@ export default function SignPage() {
               <h2 className="text-sm font-semibold text-foreground">Your Signature</h2>
             </div>
 
-            <SignaturePad onChange={setSigImage} />
+            <SignaturePad onChange={setSigImage} onBorderViolation={setSigEdge} />
 
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Full legal name</Label>
@@ -583,7 +820,7 @@ export default function SignPage() {
               <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                 <ShieldCheck size={13} /> Secured · your IP &amp; timestamp are recorded for verification
               </p>
-              <Button onClick={submit} disabled={submitting} className="sm:min-w-[180px]">
+              <Button onClick={submit} disabled={submitting || sigEdge} className="sm:min-w-[180px]" title={sigEdge ? "Fix the signature first — it is touching the edge" : undefined}>
                 {submitting ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
                 Accept &amp; Sign Offer
               </Button>

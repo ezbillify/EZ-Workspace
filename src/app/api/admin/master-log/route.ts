@@ -12,15 +12,26 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(Number(req.nextUrl.searchParams.get("limit") || 500), 2000);
   const supabase = getSupabaseAdmin();
 
+  // Check if user_presence has device_id column to prevent queries from crashing before migrations run
+  const { error: colErr } = await supabase
+    .from("user_presence")
+    .select("device_id")
+    .limit(1);
+  const hasDeviceColumn = !colErr;
+
+  const presenceSelect = hasDeviceColumn
+    ? "user_id, device_id, device_name, user_agent, last_seen, current_path, status, emp:user_id(name, employee_id, role, is_active)"
+    : "user_id, last_seen, current_path, status, emp:user_id(name, employee_id, role, is_active)";
+
   const [logsRes, presenceRes] = await Promise.all([
     supabase
       .from("audit_logs")
-      .select("id, created_at, user_id, actor_name, actor_emp_id, actor_role, action, section, summary, changes, target_type, target_id, ip_address")
+      .select("id, created_at, user_id, actor_name, actor_emp_id, actor_role, action, section, summary, changes, target_type, target_id, ip_address, path")
       .order("created_at", { ascending: false })
       .limit(limit),
     supabase
       .from("user_presence")
-      .select("user_id, last_seen, current_path, status, emp:user_id(name, employee_id, role, is_active)")
+      .select(presenceSelect)
       .order("last_seen", { ascending: false }),
   ]);
 

@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CandidateAvatar } from "@/components/onboarding/CandidateAvatar";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -91,9 +91,6 @@ interface ClaimedRow {
   creator?: { name?: string; employee_id?: string } | null;
 }
 
-function initials(name: string) {
-  return (name || "?").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-}
 
 const FILTERS: { key: string; label: string; match: (s: OnboardingStatus) => boolean }[] = [
   { key: "all", label: "All", match: () => true },
@@ -180,6 +177,8 @@ export default function OnboardingHubPage() {
     setPickerMode("interview");
     setManual(emptyManual);
     setPickerLoading(true);
+    // Prefetch the onboarding detail page bundle so navigation is instant once we have the ID.
+    if (packets.length > 0) router.prefetch(`/admin/onboarding/${packets[0].id}`);
     try {
       const [appsRes, convRes] = await Promise.all([
         supabase
@@ -225,6 +224,8 @@ export default function OnboardingHubPage() {
     if (!manual.candidate_name.trim()) return toast.error("Candidate name is required");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(manual.candidate_email.trim())) return toast.error("A valid candidate email is required");
     setCreatingManual(true);
+    setPickerOpen(false); // close immediately
+    const tid = toast.loading(`Creating onboarding for ${manual.candidate_name.trim()}…`);
     try {
       const res = await fetch("/api/onboarding/manual", {
         method: "POST",
@@ -233,10 +234,12 @@ export default function OnboardingHubPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed");
-      setPickerOpen(false);
+      toast.dismiss(tid);
       router.push(`/admin/onboarding/${json.id}`);
     } catch (e: any) {
+      toast.dismiss(tid);
       toast.error(e.message || "Failed to create onboarding");
+      setPickerOpen(true); // re-open on error
     } finally {
       setCreatingManual(false);
     }
@@ -244,6 +247,8 @@ export default function OnboardingHubPage() {
 
   async function startOnboarding(c: EligibleCandidate) {
     setCreatingFor(c.key);
+    setPickerOpen(false); // close immediately — no waiting on the modal
+    const tid = toast.loading(`Creating onboarding for ${c.name}…`);
     try {
       const res =
         c.source === "interview" && c.application_id
@@ -264,10 +269,12 @@ export default function OnboardingHubPage() {
             });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed");
-      setPickerOpen(false);
+      toast.dismiss(tid);
       router.push(`/admin/onboarding/${json.id}`);
     } catch (e: any) {
+      toast.dismiss(tid);
       toast.error(e.message || "Failed to start onboarding");
+      setPickerOpen(true); // re-open so user can retry
     } finally {
       setCreatingFor(null);
     }
@@ -403,9 +410,12 @@ export default function OnboardingHubPage() {
                     className="p-0 cursor-pointer transition-colors hover:border-primary/40"
                   >
                     <CardContent className="p-4 flex items-center gap-4">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="text-[11px] font-semibold">{initials(p.candidate_name)}</AvatarFallback>
-                      </Avatar>
+                      <CandidateAvatar
+                        email={p.candidate_email}
+                        name={p.candidate_name}
+                        className="h-9 w-9"
+                        fallbackClassName="text-[11px] font-semibold"
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-foreground truncate">{p.candidate_name}</p>
                         <p className="text-xs text-muted-foreground truncate">{p.candidate_email}</p>
@@ -518,9 +528,12 @@ export default function OnboardingHubPage() {
                         already ? "cursor-not-allowed" : "hover:border-primary/40"
                       )}
                     >
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-[10px] font-semibold">{initials(c.name)}</AvatarFallback>
-                      </Avatar>
+                      <CandidateAvatar
+                        email={c.email}
+                        name={c.name}
+                        className="h-8 w-8"
+                        fallbackClassName="text-[10px] font-semibold"
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">{c.name}</p>
                         <p className="text-xs text-muted-foreground truncate">{c.email}</p>

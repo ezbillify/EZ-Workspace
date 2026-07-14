@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ShieldAlert, LogOut } from "lucide-react";
+import { isPayrollInternOnly, PAYROLL_INTERN_HOME } from "@/lib/payroll-access";
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -349,8 +350,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn("[auth] save-session failed:", e);
     }
 
-    // 4. Always route to dashboard — ChangePasswordModal blocks the UI if must_change_password is true
-    const targetRoute = getDashboardForRole(emp.role as Role);
+    // 4. Always route to dashboard — ChangePasswordModal blocks the UI if must_change_password is true.
+    //    Payroll-intern accounts are scoped to the internship module only.
+    const targetRoute = isPayrollInternOnly(emp.email)
+      ? PAYROLL_INTERN_HOME
+      : getDashboardForRole(emp.role as Role);
+
+    if (isPayrollInternOnly(emp.email)) {
+      await fetch("/api/interns/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "intern.login", summary: "Logged in" }),
+      }).catch(() => {});
+    }
 
     // 6. FIRST company-mail login → ONE-TIME full-page Zoho SSO hand-off.
     //    Flips the user's Zoho "Last Sign In" from "Never signed in" → a real
@@ -381,6 +393,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const logout = useCallback(async () => {
+    if (user && isPayrollInternOnly(user.email)) {
+      await fetch("/api/interns/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "intern.logout", summary: "Logged out" }),
+      }).catch(() => {});
+    }
     // Destroy the server-side iron-session (np_session) FIRST so a stale userId can
     // never linger and be picked up by the SAML route on the next person's login.
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});

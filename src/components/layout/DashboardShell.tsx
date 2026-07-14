@@ -7,18 +7,23 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { GlobalAttendanceWidget } from "./GlobalAttendanceWidget";
 import { ChangePasswordModal } from "./ChangePasswordModal";
+import { InternActivityTracker } from "./InternActivityTracker";
+import { isPayrollInternOnly, isPayrollInternPathAllowed, PAYROLL_INTERN_HOME } from "@/lib/payroll-access";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { getPresenceSessionId } from "@/lib/log-ui";
 
 interface DashboardShellProps {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
   actions?: React.ReactNode;
-  moduleKey?: string;
+  // Single key, or several acceptable keys (access granted if ANY is viewable) —
+  // used for pages a role can reach under more than one nav entry (e.g. Academy).
+  moduleKey?: string | string[];
 }
 
 export function DashboardShell({ children, title, subtitle, actions, moduleKey }: DashboardShellProps) {
@@ -98,7 +103,10 @@ export function DashboardShell({ children, title, subtitle, actions, moduleKey }
       fetch("/api/presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path: pathname || (typeof window !== "undefined" ? window.location.pathname : null) }),
+        body: JSON.stringify({
+          path: pathname || (typeof window !== "undefined" ? window.location.pathname : null),
+          device_id: getPresenceSessionId(),
+        }),
       }).catch(() => {});
     ping();
     const t = setInterval(ping, 30000);
@@ -112,15 +120,34 @@ export function DashboardShell({ children, title, subtitle, actions, moduleKey }
     if (!loading && !user) router.replace("/login");
   }, [user, loading, router]);
 
-  // Real-time permission guard
+  // Payroll-intern accounts may ONLY be on the internship pages — bounce them
+  // back to the internship home from anywhere else (hard scope, independent of role).
+  useEffect(() => {
+    if (loading || !user) return;
+    if (isPayrollInternOnly(user.email) && !isPayrollInternPathAllowed(pathname)) {
+      router.replace(PAYROLL_INTERN_HOME);
+    }
+  }, [user, loading, pathname, router]);
+
+  // Real-time permission guard — a module is accessible ONLY if the role has an
+  // explicit can_view=true. The permission map is fully seeded (every role × every
+  // module has a row), so a MISSING or FALSE permission both mean "no access" — this
+  // blocks typing the URL directly, not just hiding the item from the sidebar. We
+  // never bounce a user off their own role home, to avoid any redirect loop.
   useEffect(() => {
     if (!moduleKey || !user || !permissions) return;
-
-    const perm = permissions[moduleKey];
-    if (perm && !perm.can_view) {
-      router.replace(getDashboardForRole(user.role as Role));
-    }
-  }, [permissions, moduleKey, user, router]);
+    if (user.role === "admin") return; // admin is the apex role — always allowed
+    const isPayrollIntern = isPayrollInternOnly(user.email);
+    const keys = Array.isArray(moduleKey) ? moduleKey : [moduleKey];
+    if (!keys.length) return;
+    const canView = keys.some((k) => {
+      if (isPayrollIntern && k === "payroll_internship") return true;
+      return !!permissions[k]?.can_view;
+    });
+    if (canView) return;
+    const home = isPayrollIntern ? PAYROLL_INTERN_HOME : getDashboardForRole(user.role as Role);
+    if (pathname !== home) router.replace(home);
+  }, [permissions, moduleKey, user, router, pathname]);
 
   if (loading || !user) {
     return (
@@ -133,9 +160,38 @@ export function DashboardShell({ children, title, subtitle, actions, moduleKey }
     );
   }
 
+  // Access check at RENDER time — never paint restricted content (not even for one
+  // frame) before the redirect effect above fires. By the time `loading` is false,
+  // permissions are already loaded, so this is reliable. We never block a user's own
+  // role home (pathname === home) to avoid a blank-screen loop.
+  const gateKeys = moduleKey ? (Array.isArray(moduleKey) ? moduleKey : [moduleKey]) : [];
+  const isPayrollIntern = user ? isPayrollInternOnly(user.email) : false;
+  const homePath = isPayrollIntern ? PAYROLL_INTERN_HOME : getDashboardForRole(user?.role as Role);
+  const accessDenied =
+    user &&
+    user.role !== "admin" && // admin always allowed
+    gateKeys.length > 0 &&
+    !!permissions &&
+    pathname !== homePath &&
+    !gateKeys.some((k) => {
+      if (isPayrollIntern && k === "payroll_internship") return true;
+      return !!permissions[k]?.can_view;
+    });
+  if (accessDenied) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-9 w-9 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Redirecting…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
     <ChangePasswordModal />
+    {user && <InternActivityTracker />}
     <SidebarProvider>
       <Sidebar />
       <SidebarInset className="bg-background overflow-x-hidden min-w-0">

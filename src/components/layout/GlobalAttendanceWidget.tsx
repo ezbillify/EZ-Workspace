@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Clock, Play, Pause, Square, AlertTriangle, FileCheck2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "./AuthProvider";
+import { isPayrollInternOnly } from "@/lib/payroll-access";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
+import { getPresenceSessionId } from "@/lib/log-ui";
 
 type AttSession = {
   employee_id: string;
@@ -79,7 +81,7 @@ function postPresenceStatus(status: string) {
   fetch("/api/presence", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, device_id: getPresenceSessionId() }),
   }).catch(() => {});
 }
 
@@ -229,6 +231,13 @@ export function GlobalAttendanceWidget() {
         status: checkInStatus,
       }, { onConflict: "employee_id,date" });
       if (error) throw error;
+      if (isPayrollInternOnly(user.email)) {
+        fetch("/api/interns/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "attendance.check_in", summary: `Checked in for attendance (marked as ${checkInStatus})` }),
+        }).catch(() => {});
+      }
       clearPauseState(user.id);
       setPauseState(emptyPause);
       postPresenceStatus("available");
@@ -281,6 +290,13 @@ export function GlobalAttendanceWidget() {
         .eq("employee_id", user.id)
         .eq("date", today);
       if (error) throw error;
+      if (isPayrollInternOnly(user.email)) {
+        fetch("/api/interns/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "attendance.check_out", summary: "Checked out of attendance" }),
+        }).catch(() => {});
+      }
       clearPauseState(user.id);
       setPauseState(emptyPause);
       postPresenceStatus("offline");
@@ -302,6 +318,13 @@ export function GlobalAttendanceWidget() {
     savePauseState(user.id, next);
     setPauseState(next);
     postPresenceStatus("break");
+    if (isPayrollInternOnly(user.email)) {
+      fetch("/api/interns/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "attendance.pause", summary: "Paused attendance (went on break)" }),
+      }).catch(() => {});
+    }
     toast.info("Attendance paused");
   };
 
@@ -315,6 +338,13 @@ export function GlobalAttendanceWidget() {
     savePauseState(user.id, next);
     setPauseState(next);
     postPresenceStatus("available");
+    if (isPayrollInternOnly(user.email)) {
+      fetch("/api/interns/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "attendance.resume", summary: "Resumed attendance" }),
+      }).catch(() => {});
+    }
     toast.success("Attendance resumed");
   };
 

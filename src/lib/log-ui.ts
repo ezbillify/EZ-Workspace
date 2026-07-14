@@ -16,6 +16,7 @@ export interface LogRow {
   target_type: string | null;
   target_id: string | null;
   ip_address?: string | null;
+  path?: string | null;
 }
 
 export interface PresenceRow {
@@ -109,6 +110,8 @@ const SECTION_OF: { test: RegExp; name: string }[] = [
   { test: /workspace/, name: "Workspace" },
   { test: /\/sign\//, name: "E-Sign" },
   { test: /\/documents\//, name: "Documents" },
+  { test: /payroll/, name: "Payroll" },
+  { test: /project/, name: "Projects" },
   { test: /\/admin/, name: "Admin" },
   { test: /\/dashboard/, name: "Dashboard" },
 ];
@@ -320,12 +323,78 @@ export function lastSeenLabel(iso: string, now: number): string {
 
 // ── CSV export ────────────────────────────────────────────────
 export function toCSV(rows: LogRow[]): string {
-  const head = ["Timestamp", "User", "Employee ID", "Role", "Section", "Action", "Summary", "Target", "IP"];
+  const head = ["Timestamp", "User", "Employee ID", "Role", "Module", "Section", "Action", "Summary", "Path", "Target", "IP"];
   const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = rows.map((l) => [
     fullTime(l.created_at), l.actor_name ?? "", l.actor_emp_id ?? "", l.actor_role ?? "",
-    sectionForAction(l.action, l.section), l.action, l.summary ?? "",
-    `${l.target_type ?? ""} ${l.target_id ?? ""}`.trim(), l.ip_address ?? "",
+    l.path ? screenLabel(l.path) : "", sectionForAction(l.action, l.section), l.action, l.summary ?? "",
+    l.path ?? "", `${l.target_type ?? ""} ${l.target_id ?? ""}`.trim(), l.ip_address ?? "",
   ].map(esc).join(","));
   return [head.map(esc).join(","), ...lines].join("\r\n");
+}
+
+export function getPresenceSessionId(): string {
+  if (typeof window === "undefined") return "default";
+  let id = sessionStorage.getItem("np_presence_session_id");
+  if (!id) {
+    id = Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem("np_presence_session_id", id);
+  }
+  return id;
+}
+
+// ── IST (India) date/time filtering for log classification ────────────────────
+// Every timestamp is stored UTC; these read the wall-clock in IST (UTC+5:30) so the
+// Master Log / Sessions / Security / Activity pages can filter by time-of-day and by
+// year / month / day the Indian way.
+const IST_OFFSET_MIN = 330; // +5:30
+
+export interface ISTParts { year: number; month: number; day: number; hour: number; minute: number }
+export function istParts(iso: string): ISTParts {
+  const shifted = new Date(new Date(iso).getTime() + IST_OFFSET_MIN * 60000);
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth() + 1, // 1–12
+    day: shifted.getUTCDate(),
+    hour: shifted.getUTCHours(),
+    minute: shifted.getUTCMinutes(),
+  };
+}
+
+export type TimeOfDay = "all" | "morning" | "afternoon" | "evening" | "night";
+// Indian convention: Morning 5–12, Afternoon 12–5, Evening 5–9, Night 9–5.
+export function timeOfDayIST(iso: string): Exclude<TimeOfDay, "all"> {
+  const h = istParts(iso).hour;
+  if (h >= 5 && h < 12) return "morning";
+  if (h >= 12 && h < 17) return "afternoon";
+  if (h >= 17 && h < 21) return "evening";
+  return "night";
+}
+export const TIME_OF_DAY_OPTIONS: { value: TimeOfDay; label: string }[] = [
+  { value: "all",       label: "All day" },
+  { value: "morning",   label: "🌅 Morning (5 AM–12 PM)" },
+  { value: "afternoon", label: "☀️ Afternoon (12–5 PM)" },
+  { value: "evening",   label: "🌇 Evening (5–9 PM)" },
+  { value: "night",     label: "🌙 Night (9 PM–5 AM)" },
+];
+export const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+export interface LogTimeFilter { tod: TimeOfDay; year: string; month: string; day: string } // "all" | numeric string
+export const DEFAULT_LOG_TIME_FILTER: LogTimeFilter = { tod: "all", year: "all", month: "all", day: "all" };
+
+/** True if the timestamp passes the IST time-of-day + year/month/day filter. */
+export function passesTimeFilter(iso: string, f: LogTimeFilter): boolean {
+  const p = istParts(iso);
+  if (f.year !== "all" && p.year !== Number(f.year)) return false;
+  if (f.month !== "all" && p.month !== Number(f.month)) return false;
+  if (f.day !== "all" && p.day !== Number(f.day)) return false;
+  if (f.tod !== "all" && timeOfDayIST(iso) !== f.tod) return false;
+  return true;
+}
+
+/** Distinct IST years present in a set of rows (descending), for the year dropdown. */
+export function istYearsOf(isos: string[]): number[] {
+  const set = new Set<number>();
+  for (const iso of isos) set.add(istParts(iso).year);
+  return Array.from(set).sort((a, b) => b - a);
 }
