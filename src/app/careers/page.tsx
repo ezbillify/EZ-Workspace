@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -284,7 +305,7 @@ export default function CareersPortal() {
                N
             </div>
             <div className="flex flex-col">
-               <span className="text-sm font-black uppercase tracking-tighter leading-none">Namaah Tech</span>
+               <span className="text-sm font-black uppercase tracking-tighter leading-none">EZ-Workspace Tech</span>
                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Recruitment_Portal v2.0</span>
             </div>
          </div>
@@ -612,7 +633,7 @@ export default function CareersPortal() {
             <div className="flex flex-col items-center md:items-start gap-4">
                <div className="flex items-center gap-3">
                   <div className="h-8 w-8 bg-slate-900 text-white flex items-center justify-center font-black text-sm rounded-lg">N</div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900">Namaah Neural Grid</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900">EZ-Workspace Neural Grid</span>
                </div>
                <p className="text-[9px] font-bold text-slate-400 max-w-xs text-center md:text-left">
                   Architecting the cognitive future of enterprise intelligence. 
@@ -631,14 +652,8 @@ export default function CareersPortal() {
 
       {/* Global CSS for 3D perspective */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-        
-        :root {
-          --font-space-grotesk: 'Space Grotesk', sans-serif;
-        }
-
         body {
-          font-family: var(--font-space-grotesk);
+          font-family: var(--font-sans);
         }
 
         .scrollbar-hide::-webkit-scrollbar {

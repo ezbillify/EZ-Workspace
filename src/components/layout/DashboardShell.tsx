@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 "use client";
 
 import { useAuth, getDashboardForRole, type Role } from "./AuthProvider";
@@ -212,10 +233,18 @@ export function DashboardShell({ children, title, subtitle, actions, moduleKey }
           </div>
         </header>
 
-        <div className="flex-1 overflow-x-hidden p-4 sm:p-5 lg:p-6">
-          <div className="mx-auto w-full max-w-[1400px]">
+        <div className="flex-1 overflow-x-hidden p-4 sm:p-5 lg:p-6 flex flex-col justify-between min-h-[calc(100vh-4rem)]">
+          <div className="mx-auto w-full max-w-[1400px] flex-1">
             {children}
           </div>
+          <footer className="mt-12 border-t border-border/60 pt-6 text-center text-xs text-muted-foreground pb-6">
+            <p className="font-semibold text-foreground/80">
+              Copyright &copy; {new Date().getFullYear()} EZBillify Ventures Pvt Ltd. All rights reserved.
+            </p>
+            <p className="mt-1.5 max-w-2xl mx-auto leading-relaxed">
+              Licensed under GNU Affero General Public License v3.0 (AGPL-3.0). This software is provided "AS IS", without warranty of any kind. <strong>Any copied or redistributed versions cannot recover or hold developers liable for any losses or damages.</strong>
+            </p>
+          </footer>
         </div>
       </SidebarInset>
     </SidebarProvider>

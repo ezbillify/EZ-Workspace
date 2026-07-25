@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.ezbillify.ezworkspace.app-mergeDebugResources-2:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "D:\\gradle-cache\\caches\\8.14\\transforms\\e7fe3d24a50b4343a13796767c190e71\\transformed\\material3\\res\\values-v30\\values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        }
+    ]
+}

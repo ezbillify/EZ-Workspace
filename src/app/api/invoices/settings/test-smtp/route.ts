@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
@@ -9,7 +30,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const fromName  = smtp_from_name  || "Namaah Technologies";
+    const fromName  = smtp_from_name  || "EZ-Workspace Technologies";
     const fromEmail = smtp_from_email || smtp_user;
     const recipient = test_to || smtp_user;
     const today     = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
@@ -50,7 +71,7 @@ export async function POST(req: Request) {
           <td style="background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 60%,#3b82f6 100%);padding:36px 44px;text-align:center;">
             <p style="margin:0;font-size:32px;">✅</p>
             <p style="margin:10px 0 0;font-size:22px;font-weight:900;color:#ffffff;">SMTP Configuration Verified</p>
-            <p style="margin:6px 0 0;font-size:11px;color:#bfdbfe;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Namaah Panel · Invoice Settings</p>
+            <p style="margin:6px 0 0;font-size:11px;color:#bfdbfe;font-weight:700;letter-spacing:2px;text-transform:uppercase;">EZ-Workspace Panel · Invoice Settings</p>
           </td>
         </tr>
         <tr>
@@ -108,7 +129,7 @@ export async function POST(req: Request) {
         <tr>
           <td style="padding:0 44px 28px;">
             <p style="margin:0;font-size:13px;color:#475569;">Best regards,</p>
-            <p style="margin:6px 0 0;font-size:14px;font-weight:800;color:#1e293b;">Namaah Panel</p>
+            <p style="margin:6px 0 0;font-size:14px;font-weight:800;color:#1e293b;">EZ-Workspace Panel</p>
           </td>
         </tr>
         <tr>
@@ -128,7 +149,7 @@ export async function POST(req: Request) {
     const info = await transporter.sendMail({
       from:    `"${fromName}" <${fromEmail}>`,
       to:      recipient,
-      subject: `✅ SMTP Verified — Namaah Panel (${today})`,
+      subject: `✅ SMTP Verified — EZ-Workspace Panel (${today})`,
       html,
     });
 

@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -62,6 +83,47 @@
   100% { transform: translateX(280%); width: 40%; }
 }
 
+/* ── Glass-orb 3D motion (brand icon + EZ AI marker) ── */
+@keyframes ez-orb-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+@keyframes ez-orb-float-lg {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+@keyframes ez-orb-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.08); }
+}
+@keyframes ez-orb-glow-beat {
+  0%, 100% { opacity: 0.4;  transform: scale(1); }
+  14%      { opacity: 0.95; transform: scale(1.22); }
+  28%      { opacity: 0.55; transform: scale(1); }
+  42%      { opacity: 0.85; transform: scale(1.14); }
+  70%      { opacity: 0.4;  transform: scale(1); }
+}
+@keyframes ez-orb-heartbeat {
+  0%   { transform: scale(1); }
+  14%  { transform: scale(1.13); }
+  28%  { transform: scale(1); }
+  42%  { transform: scale(1.08); }
+  70%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+@keyframes ez-orb-sheen {
+  to { transform: rotate(360deg); }
+}
+.ez-orb-float    { animation: ez-orb-float 4s ease-in-out infinite; }
+.ez-orb-float-lg { animation: ez-orb-float-lg 3.6s ease-in-out infinite; }
+.ez-orb-pulse     { animation: ez-orb-pulse 3.2s ease-in-out infinite; }
+.ez-orb-glow-beat { animation: ez-orb-glow-beat 1.9s ease-in-out infinite; }
+.ez-orb-heartbeat { animation: ez-orb-heartbeat 1.9s ease-in-out infinite; }
+.ez-orb-sheen { animation: ez-orb-sheen 8s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ez-orb-float, .ez-orb-float-lg, .ez-orb-pulse, .ez-orb-glow-beat, .ez-orb-heartbeat, .ez-orb-sheen { animation: none !important; }
+}
+
 /* ─────────────────────────────────────────────────────────
    CSS DESIGN TOKENS — light & dark
    All colours reference these vars so toggling .dark
@@ -69,30 +131,33 @@
 ───────────────────────────────────────────────────────── */
 @layer base {
   :root {
+    /* ── 3-COLOR SYSTEM · blue #3b82f6 · dark #1f2937 · white #ffffff ──
+       Neutrals = opacity tints of #1f2937; hovers = tints of #3b82f6.
+       Semantic status colours (success/warning/danger/info) kept as-is. */
     /* Page background */
-    --bg:               210 20% 98%;        /* slate-50ish */
+    --bg:               0 0% 100%;          /* white #ffffff */
     /* Card / panel surfaces */
-    --surface:          0 0% 100%;          /* white */
-    --surface-raised:   210 17% 95%;        /* hover rows, filter pills */
-    --surface-overlay:  210 14% 91%;        /* deepest inset */
+    --surface:          0 0% 100%;          /* white #ffffff */
+    --surface-raised:   215 20% 96%;        /* faint #1f2937 tint (hover rows) */
+    --surface-overlay:  215 20% 93%;
     /* Text */
-    --fg:               222 47% 11%;        /* slate-900 */
-    --fg-muted:         215 16% 47%;        /* slate-500 */
-    --fg-subtle:        214 14% 65%;        /* slate-400 */
+    --fg:               215 28% 17%;        /* #1f2937 */
+    --fg-muted:         215 18% 42%;        /* muted #1f2937 */
+    --fg-subtle:        215 15% 60%;
     /* Borders */
-    --border: oklch(0.87 0 0);         /* visible light grey — outlines cards/tables/inputs */
-    --border-strong:    215 20% 78%;        /* slate-300 */
+    --border: rgb(31 41 55 / 0.12);         /* #1f2937 @12% */
+    --border-strong:    215 20% 75%;
     /* Brand */
-    --primary: oklch(0.205 0 0);        /* slate-900 */
-    --primary-fg:       210 40% 98%;
-    --primary-hover:    0 0% 0%;
+    --primary: #3b82f6;                     /* blue */
+    --primary-fg:       0 0% 100%;          /* white */
+    --primary-hover:    217 91% 52%;        /* darker blue */
     /* Sidebar */
-    --sidebar-bg:       210 17% 97%;        /* slightly off-white */
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-active-bg: 222 47% 11%;       /* slate-900 */
-    --sidebar-active-fg: 0 0% 100%;
-    --sidebar-hover-bg: 210 20% 93%;
-    /* Semantic */
+    --sidebar-bg:       0 0% 100%;          /* white */
+    --sidebar-border: rgb(31 41 55 / 0.10);
+    --sidebar-active-bg: 217 91% 93%;       /* light blue pill */
+    --sidebar-active-fg: 217 91% 60%;       /* #3b82f6 */
+    --sidebar-hover-bg: 217 91% 96%;        /* faint blue */
+    /* Semantic (kept — status meaning, not blue/black/white) */
     --success:          160 84% 39%;
     --success-bg:       152 81% 96%;
     --success-fg:       158 64% 25%;
@@ -109,58 +174,59 @@
     --purple-bg:        270 100% 98%;
     --purple-fg:        263 70% 40%;
     /* Input */
-    --input-bg:         0 0% 100%;
-    --input-border:     214 32% 88%;
-    --ring: oklch(0.708 0 0);
+    --input-bg:         0 0% 100%;          /* white */
+    --input-border:     215 20% 82%;
+    --ring: #3b82f6;                        /* blue focus ring */
     --radius: 0.5rem;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --background: #ffffff;
+    --foreground: #1f2937;
+    --card: #ffffff;
+    --card-foreground: #1f2937;
+    --popover: #ffffff;
+    --popover-foreground: #1f2937;
+    --primary-foreground: #ffffff;
+    --secondary: rgb(31 41 55 / 0.05);
+    --secondary-foreground: #1f2937;
+    --muted: rgb(31 41 55 / 0.04);
+    --muted-foreground: rgb(31 41 55 / 0.60);
+    --accent: rgb(59 130 246 / 0.10);        /* blue @10% hover */
+    --accent-foreground: #1f2937;
     --destructive: oklch(0.577 0.245 27.325);
-    --input: oklch(0.87 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: var(--background);           /* light: match page exactly */
-    --sidebar-foreground: var(--foreground);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.88 0 0);       /* clearer hover/active bg — visible grey in light mode */
-    --sidebar-accent-foreground: oklch(0.145 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
-    --sidebar-border: oklch(0 0 0 / 7%);    /* faint inner separators in light mode */
+    --input: rgb(31 41 55 / 0.15);
+    --chart-1: #3b82f6;                       /* blue */
+    --chart-2: #1f2937;                       /* dark */
+    --chart-3: rgb(59 130 246 / 0.60);        /* blue tint */
+    --chart-4: rgb(31 41 55 / 0.55);          /* dark tint */
+    --chart-5: rgb(59 130 246 / 0.30);        /* blue tint */
+    --sidebar: #ffffff;
+    --sidebar-foreground: #1f2937;
+    --sidebar-primary: #3b82f6;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: rgb(59 130 246 / 0.12);   /* light blue active/hover pill */
+    --sidebar-accent-foreground: #3b82f6;       /* blue */
+    --sidebar-ring: #3b82f6;
+    --sidebar-border: rgb(31 41 55 / 0.08);
   }
 
   .dark {
-    --bg:               222 47% 5%;
-    --surface:          222 47% 8%;
-    --surface-raised:   222 40% 12%;
-    --surface-overlay:  222 35% 16%;
-    --fg:               210 40% 96%;
-    --fg-muted:         215 20% 58%;
-    --fg-subtle:        215 15% 42%;
-    --border: oklch(1 0 0 / 10%);
-    --border-strong:    217 25% 24%;
-    --primary: oklch(0.922 0 0);        /* inverted in dark — light text */
-    --primary-fg:       222 47% 8%;
-    --primary-hover:    210 40% 88%;
-    --sidebar-bg:       222 47% 6%;
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-active-bg: 210 40% 96%;
-    --sidebar-active-fg: 222 47% 8%;
-    --sidebar-hover-bg: 222 40% 12%;
+    /* ── dark · bg #1f2937 · text #ffffff · blue #3b82f6 ── */
+    --bg:               215 30% 12%;        /* page, below cards */
+    --surface:          215 28% 17%;        /* #1f2937 */
+    --surface-raised:   215 22% 22%;
+    --surface-overlay:  215 20% 26%;
+    --fg:               0 0% 100%;          /* white */
+    --fg-muted:         210 16% 74%;
+    --fg-subtle:        210 12% 56%;
+    --border: rgb(255 255 255 / 0.12);
+    --border-strong:    210 15% 40%;
+    --primary: #3b82f6;                     /* blue */
+    --primary-fg:       0 0% 100%;
+    --primary-hover:    217 91% 68%;        /* lighter blue */
+    --sidebar-bg:       215 30% 13%;
+    --sidebar-border: rgb(255 255 255 / 0.10);
+    --sidebar-active-bg: 217 45% 30%;       /* deep blue pill */
+    --sidebar-active-fg: 217 91% 78%;       /* light blue */
+    --sidebar-hover-bg: 215 22% 20%;
     --success:          160 60% 45%;
     --success-bg:       160 40% 10%;
     --success-fg:       160 60% 65%;
@@ -176,37 +242,37 @@
     --purple:           262 75% 65%;
     --purple-bg:        262 40% 12%;
     --purple-fg:        262 75% 80%;
-    --input-bg:         222 40% 10%;
-    --input-border:     217 33% 20%;
-    --ring: oklch(0.556 0 0);
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    --input-bg:         215 25% 22%;
+    --input-border:     210 15% 35%;
+    --ring: #3b82f6;                        /* blue focus ring */
+    --background: #1a222e;                   /* page (darker #1f2937 family) */
+    --foreground: #ffffff;
+    --card: #1f2937;
+    --card-foreground: #ffffff;
+    --popover: #1f2937;
+    --popover-foreground: #ffffff;
+    --primary-foreground: #ffffff;           /* white text on blue */
+    --secondary: rgb(255 255 255 / 0.08);
+    --secondary-foreground: #ffffff;
+    --muted: rgb(255 255 255 / 0.06);
+    --muted-foreground: rgb(255 255 255 / 0.65);
+    --accent: rgb(59 130 246 / 0.20);        /* blue tint hover */
+    --accent-foreground: #ffffff;
     --destructive: oklch(0.704 0.191 22.216);
-    --input: oklch(1 0 0 / 15%);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.175 0 0);            /* dark: subtle elevation above main bg (0.145) */
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.32 0 0);       /* clear hover/active bg in dark mode */
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-ring: oklch(0.556 0 0);
-    --sidebar-border: oklch(1 0 0 / 8%);     /* faint inner separators in dark mode */
+    --input: rgb(255 255 255 / 0.15);
+    --chart-1: #3b82f6;                       /* blue */
+    --chart-2: #ffffff;                       /* white */
+    --chart-3: rgb(59 130 246 / 0.60);        /* blue tint */
+    --chart-4: rgb(255 255 255 / 0.55);       /* white tint */
+    --chart-5: rgb(59 130 246 / 0.32);        /* blue tint */
+    --sidebar: #1a222e;
+    --sidebar-foreground: #ffffff;
+    --sidebar-primary: #3b82f6;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: rgb(59 130 246 / 0.22);  /* dark blue active/hover */
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-ring: #3b82f6;
+    --sidebar-border: rgb(255 255 255 / 0.08);
   }
   body {
     background-color: var(--background);

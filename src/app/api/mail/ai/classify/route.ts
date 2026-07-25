@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { classifyEmail, generateReplySuggestions, summarizeThread, callGemma } from "@/lib/zoho-mail";
@@ -104,7 +125,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (type === "improve_tone") {
-      const IMPROVE_SYSTEM = `You are a senior professional email writer for Namaah, a corporate HR platform. You rewrite emails to be polished, well-structured, and highly professional. You always produce HTML with inline CSS for email formatting. You follow the exact delimited output format given — no deviations.`;
+      const IMPROVE_SYSTEM = `You are a senior professional email writer for EZ-Workspace, a corporate HR platform. You rewrite emails to be polished, well-structured, and highly professional. You always produce HTML with inline CSS for email formatting. You follow the exact delimited output format given — no deviations.`;
 
       const prompt = `You are rewriting a business email to be professional. Study the example output below, then produce the same format for the ACTUAL EMAIL at the bottom.
 
@@ -114,11 +135,11 @@ Interview Invitation — Data Science Role
 ===BODY===
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.75;color:#1a202c;max-width:600px;">
 <p style="margin:0 0 14px 0;">Dear Rahul,</p>
-<p style="margin:0 0 14px 0;">We are pleased to inform you that your application has been shortlisted for the <strong style="font-weight:700;color:#111827;">Data Science</strong> role at Namaah.</p>
+<p style="margin:0 0 14px 0;">We are pleased to inform you that your application has been shortlisted for the <strong style="font-weight:700;color:#111827;">Data Science</strong> role at EZ-Workspace.</p>
 <p style="margin:0 0 14px 0;padding:10px 16px;background:#eff6ff;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0;font-size:14px;"><strong style="font-weight:700;">Date:</strong> 12 June 2026 &nbsp;|&nbsp; <strong style="font-weight:700;">Time:</strong> 10:00 AM &nbsp;|&nbsp; <strong style="font-weight:700;">Venue:</strong> Jayanagar, Bengaluru</p>
 <p style="margin:0 0 14px 0;">Please confirm your attendance by replying to this email at your earliest convenience.</p>
 <p style="margin:14px 0 4px 0;">Best regards,</p>
-<p style="margin:0;font-weight:600;color:#111827;">HR Team, Namaah</p>
+<p style="margin:0;font-weight:600;color:#111827;">HR Team, EZ-Workspace</p>
 </div>
 ===END===
 
@@ -186,7 +207,7 @@ Interview Confirmed — 12 June, 10 AM
 <p style="margin:0 0 14px 0;">Your interview for the <strong style="font-weight:700;color:#111827;">Data Science</strong> role is confirmed for <strong style="font-weight:700;color:#111827;">12 June 2026 at 10:00 AM</strong> at our Jayanagar office, Bengaluru.</p>
 <p style="margin:0 0 14px 0;">Please bring a copy of your resume and any relevant documents. Kindly reply to confirm your attendance.</p>
 <p style="margin:14px 0 4px 0;">Best regards,</p>
-<p style="margin:0;font-weight:600;color:#111827;">HR Team, Namaah</p>
+<p style="margin:0;font-weight:600;color:#111827;">HR Team, EZ-Workspace</p>
 </div>
 ===END===
 

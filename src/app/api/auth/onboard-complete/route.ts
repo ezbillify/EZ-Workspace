@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import nodemailer from "nodemailer";
@@ -93,13 +114,13 @@ export async function POST(req: NextRequest) {
         const mailHtml = `
           <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
             <div style="background-color: #0f172a; color: #ffffff; padding: 32px 20px; text-align: center;">
-              <h1 style="margin:0; letter-spacing: 4px; font-size: 24px; font-weight: 800; text-transform: uppercase;">${config.company_name || "NAMAAH PULSE"}</h1>
+              <h1 style="margin:0; letter-spacing: 4px; font-size: 24px; font-weight: 800; text-transform: uppercase;">${config.company_name || "EZ-WORKSPACE PULSE"}</h1>
               <p style="margin-top: 8px; opacity: 0.8; font-size: 14px;">Onboarding Registration Completed Successfully</p>
             </div>
             <div style="padding: 40px; color: #1e293b; line-height: 1.6;">
               <h2 style="margin-top: 0; font-size: 20px; font-weight: 700; color: #0f172a;">Welcome to the Team!</h2>
               <p>Hi <b>${emp.name}</b>,</p>
-              <p>Congratulations! Your onboarding profile has been finalized, and you have registered successfully at ${config.company_name || "Namaah Nexus"}.</p>
+              <p>Congratulations! Your onboarding profile has been finalized, and you have registered successfully at ${config.company_name || "EZ-Workspace"}.</p>
               <p>Your password has been updated and synchronized with your professional email account. You are now ready to access the command center panel.</p>
               
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 24px; border-radius: 8px; margin: 24px 0;">
@@ -128,14 +149,14 @@ export async function POST(req: NextRequest) {
 
               <div style="margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 24px; font-size: 12px; color: #94a3b8;">
                 <p style="margin: 0; font-weight: 700; color: #0f172a;">Identity & Workspace Management</p>
-                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 12px;">Automated Provisioning Engine · ${config.company_name || "Namaah Nexus"}</p>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 12px;">Automated Provisioning Engine · ${config.company_name || "EZ-Workspace"}</p>
               </div>
             </div>
           </div>
         `;
 
         await transporter.sendMail({
-          from: `"${config.company_name || "Namaah Nexus"}" <${config.smtp_user}>`,
+          from: `"${config.company_name || "EZ-Workspace"}" <${config.smtp_user}>`,
           to: recipients,
           subject: `Onboarding Successful - Account Registered & Active`,
           html: mailHtml

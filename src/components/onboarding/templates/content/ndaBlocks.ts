@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 // AUTO-GENERATED from the source .docx — verbatim legal text.
 // Do not edit by hand; regenerate from docs/ if the source changes.
 import type { DocBlock } from "../docModel";
@@ -17,7 +38,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "b",
-"t": "Namaah Private Limited Represented by: Rahul Bharath, Founder, Executive Chairman & Managing Director Hereinafter referred to as the “Company” or “Disclosing Party.”"
+"t": "EZBillify Ventures Pvt Ltd Represented by: Rahul Bharath, Founder, Executive Chairman & Managing Director Hereinafter referred to as the “Company” or “Disclosing Party.”"
 },
 {
 "k": "s",
@@ -57,7 +78,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "b",
-"t": "This includes work and information relating to all present and future pillars of Namaah Private Limited, including but not limited to technology services, design and creative services, marketing and sales, entertainment and content production (including scripts, storyboards, AI-generated videos, and children-focused content), irrespective of role title or designation."
+"t": "This includes work and information relating to all present and future pillars of EZBillify Ventures Pvt Ltd, including but not limited to technology services, design and creative services, marketing and sales, entertainment and content production (including scripts, storyboards, AI-generated videos, and children-focused content), irrespective of role title or designation."
 },
 {
 "k": "b",
@@ -305,7 +326,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "b",
-"t": "shall be the sole and exclusive property of Namaah Private Limited."
+"t": "shall be the sole and exclusive property of EZBillify Ventures Pvt Ltd."
 },
 {
 "k": "b",
@@ -329,7 +350,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "b",
-"t": "If portfolio use is approved, it must include the credit:“Created during my internship at Namaah Private Limited.”"
+"t": "If portfolio use is approved, it must include the credit:“Created during my internship at EZBillify Ventures Pvt Ltd.”"
 },
 {
 "k": "s",
@@ -341,7 +362,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "b",
-"t": "To the extent any such work does not qualify as work made for hire, the Intern hereby irrevocably assigns to Namaah Private Limited all worldwide right, title, and interest, including all intellectual property rights therein."
+"t": "To the extent any such work does not qualify as work made for hire, the Intern hereby irrevocably assigns to EZBillify Ventures Pvt Ltd all worldwide right, title, and interest, including all intellectual property rights therein."
 },
 {
 "k": "s",
@@ -377,7 +398,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "b",
-"t": "Any content generated using AI tools, prompts, workflows, model configurations, templates, or systems provided, instructed, or approved by the Company—whether partially or fully AI-generated—shall be deemed Company work product and shall belong exclusively to Namaah Private Limited."
+"t": "Any content generated using AI tools, prompts, workflows, model configurations, templates, or systems provided, instructed, or approved by the Company—whether partially or fully AI-generated—shall be deemed Company work product and shall belong exclusively to EZBillify Ventures Pvt Ltd."
 },
 {
 "k": "s",
@@ -397,7 +418,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "b",
-"t": "Portfolio use may be denied for unreleased, monetized, or children-focused content, including content under Namaah Originals and children’s content initiatives."
+"t": "Portfolio use may be denied for unreleased, monetized, or children-focused content, including content under EZ-Workspace Originals and children’s content initiatives."
 },
 {
 "k": "s",
@@ -405,7 +426,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "b",
-"t": "All source code, repositories, scripts, APIs, integrations, databases, configurations, architectures, deployment systems, infrastructure assets, technical documentation, development environments, repositories, and related technical assets created, modified, accessed, or maintained during the internship shall remain the exclusive property of Namaah Private Limited."
+"t": "All source code, repositories, scripts, APIs, integrations, databases, configurations, architectures, deployment systems, infrastructure assets, technical documentation, development environments, repositories, and related technical assets created, modified, accessed, or maintained during the internship shall remain the exclusive property of EZBillify Ventures Pvt Ltd."
 },
 {
 "k": "b",
@@ -565,7 +586,7 @@ export const NDA_BLOCKS: DocBlock[] = [
 },
 {
 "k": "s",
-"t": "FOR NAMAAH PRIVATE LIMITED"
+"t": "FOR EZBILLIFY VENTURES PVT LTD"
 },
 {
 "k": "b",

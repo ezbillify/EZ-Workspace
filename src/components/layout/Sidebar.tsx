@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 "use client";
 
 import Link from "next/link";
@@ -13,6 +34,7 @@ import {
   BookOpen, Table2, Presentation, StickyNote, LayoutTemplate, Award, GraduationCap,
   Inbox, PenLine, Send, Paperclip, Layers, KeyRound, FileSignature, ScrollText,
   MonitorSmartphone, MonitorPlay, ShieldAlert,
+  Search,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { useTheme } from "next-themes";
@@ -24,15 +46,13 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/ToastLegacy";
 import { playMessagePing } from "@/lib/sounds";
@@ -210,11 +230,13 @@ export function Sidebar() {
   const { user, permissions, logout } = useAuth();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const { toggleSidebar } = useSidebar();
   const navRef = useRef<HTMLDivElement>(null);
 
   const role = roleBadge(user?.role);
 
   const [unreadCount, setUnreadCount] = useState(0);
+  const [search, setSearch] = useState("");
   const { showToast } = useToast();
 
   // Play dual-tone chime sound programmatically via browser Web Audio API
@@ -259,7 +281,7 @@ export function Sidebar() {
       const typeLabel = msg.is_internal ? "INTERNAL" : "EXTERNAL";
       const notification = new Notification(`[${typeLabel}] New Mail from ${msg.sender_name}`, {
         body: msg.subject || "(No Subject)",
-        icon: "/icon.png",
+        icon: "/favicon.png",
         tag: msg.id,
       });
 
@@ -307,7 +329,7 @@ export function Sidebar() {
           showDesktopNotification(payload.payload);
 
           const isInternal = payload.payload.is_internal;
-          const senderName = payload.payload.sender_name || "Namaah";
+          const senderName = payload.payload.sender_name || "EZ-Workspace";
           const subject = payload.payload.subject || "(No Subject)";
 
           const typeBadge = isInternal ? (
@@ -437,54 +459,78 @@ export function Sidebar() {
     return current === title;
   };
 
+  const q = search.trim().toLowerCase();
+  const visibleSections = q
+    ? sections
+        .map((s) => ({ ...s, items: s.items.filter((i) => i.label.toLowerCase().includes(q)) }))
+        .filter((s) => s.items.length > 0)
+    : sections;
+
   return (
     <ShadcnSidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-semibold">
-            N
+      {/* ─── HEADER ─── */}
+      <SidebarHeader className="gap-2.5 border-b border-sidebar-border p-3">
+        <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:justify-center">
+          {/* Brand mark — flat, static */}
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-sm ring-1 ring-sidebar-border">
+            <img src="/favicon.png" alt="EZ-Workspace" className="h-full w-full object-cover" />
           </div>
-          <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <p className="text-sm font-semibold tracking-tight truncate">Namaah Nexus</p>
-            <p className="text-[11px] text-muted-foreground truncate">Workspace</p>
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <p className="truncate text-[14px] font-bold leading-tight tracking-tight text-foreground">EZ-Workspace</p>
+            <p className="truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Operations Panel</p>
           </div>
         </div>
+
+        {/* Search (expanded) */}
+        <div className="relative group-data-[collapsible=icon]:hidden">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search menu…"
+            className="h-8 w-full rounded-lg border border-sidebar-border bg-sidebar-accent/40 pl-8 pr-2 text-[12px] font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:bg-sidebar focus:ring-2 focus:ring-primary/15"
+          />
+        </div>
+
+        {/* Search icon (collapsed) */}
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          title="Search"
+          className="mx-auto hidden h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground group-data-[collapsible=icon]:flex"
+        >
+          <Search size={16} />
+        </button>
       </SidebarHeader>
 
-      <SidebarContent ref={navRef} onScroll={handleScroll} className="gap-0 px-2 py-2">
-        {sections.map((section) => {
-          const open = isSectionOpen(section.title);
+      {/* ─── NAV ─── */}
+      <SidebarContent ref={navRef} onScroll={handleScroll} className="gap-0 px-2 py-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:pr-1">
+        {visibleSections.map((section) => {
+          const open = q ? true : isSectionOpen(section.title);
           const sectionHasActive = section.items.some((i) => isActive(i.href));
           return (
-            <SidebarGroup key={section.title} className="py-0.5">
+            <SidebarGroup key={section.title} className="py-0.5 group-data-[collapsible=icon]:p-0">
               <button
                 type="button"
-                onClick={() => toggleSection(section.title)}
+                onClick={() => { if (!q) toggleSection(section.title); }}
                 aria-expanded={open}
-                className="group/label group-data-[collapsible=icon]:hidden flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent/40"
+                className="group/label flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent/40 group-data-[collapsible=icon]:hidden"
               >
-                <SidebarGroupLabel asChild>
-                  <span
-                    className={cn(
-                      "text-xs font-semibold transition-colors",
-                      sectionHasActive || open
-                        ? "text-foreground"
-                        : "text-muted-foreground group-hover/label:text-foreground",
-                    )}
-                  >
-                    {section.title}
-                  </span>
-                </SidebarGroupLabel>
-                <ChevronRight
-                  size={13}
+                <span
                   className={cn(
-                    "text-muted-foreground transition-transform duration-200 ease-out",
-                    open && "rotate-90 text-foreground",
+                    "text-[10px] font-bold uppercase tracking-wider transition-colors",
+                    sectionHasActive || open ? "text-foreground" : "text-muted-foreground group-hover/label:text-foreground",
                   )}
+                >
+                  {section.title}
+                </span>
+                <ChevronRight
+                  size={12}
+                  className={cn("text-muted-foreground transition-transform duration-200 ease-out", open && "rotate-90 text-foreground")}
                 />
               </button>
 
-              {/* Animated expand/collapse — grid-rows trick (no JS height calc) */}
+              {/* Animated expand/collapse */}
               <div
                 className={cn(
                   "grid transition-[grid-template-rows] duration-200 ease-out",
@@ -493,31 +539,27 @@ export function Sidebar() {
                 )}
               >
                 <div className="overflow-hidden">
-                  <SidebarGroupContent
-                    className={cn(
-                      "mt-1 ml-3 border-l border-sidebar-border/60 pl-2",
-                      // No indent / guide in icon-collapsed mode
-                      "group-data-[collapsible=icon]:ml-0 group-data-[collapsible=icon]:pl-0 group-data-[collapsible=icon]:border-l-0 group-data-[collapsible=icon]:mt-0",
-                    )}
-                  >
-                    <SidebarMenu className="gap-0.5">
+                  <SidebarGroupContent className="mt-0.5">
+                    <SidebarMenu className="gap-0.5 group-data-[collapsible=icon]:items-center">
                       {section.items.map(({ href, label, icon: Icon }) => {
                         const active = isActive(href);
+                        const showBadge = (label === "Inbox" || label === "Mail Hub") && unreadCount > 0;
                         return (
                           <SidebarMenuItem key={href}>
                             <SidebarMenuButton
                               asChild
                               isActive={active}
                               tooltip={label}
-                              className="h-8 rounded-md text-sm font-normal data-[active=true]:bg-sidebar-accent data-[active=true]:text-foreground data-[active=true]:font-medium"
+                              className="relative h-9 rounded-lg text-[13px] font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-foreground data-[active=true]:bg-primary/10 data-[active=true]:font-semibold data-[active=true]:text-primary group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
                             >
-                              <Link href={href} scroll={false} className="flex items-center justify-between w-full">
-                                <span className="flex items-center gap-2 min-w-0">
-                                  <Icon className="size-4 shrink-0" />
-                                  <span className="truncate">{label}</span>
-                                </span>
-                                {(label === "Inbox" || label === "Mail Hub") && unreadCount > 0 && (
-                                  <span className="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white leading-none">
+                              <Link href={href} scroll={false} className="flex w-full items-center gap-2.5">
+                                {active && (
+                                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary group-data-[collapsible=icon]:hidden" />
+                                )}
+                                <Icon className="size-[18px] shrink-0" />
+                                <span className="flex-1 truncate group-data-[collapsible=icon]:hidden">{label}</span>
+                                {showBadge && (
+                                  <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black leading-none text-primary-foreground group-data-[collapsible=icon]:absolute group-data-[collapsible=icon]:right-1 group-data-[collapsible=icon]:top-1 group-data-[collapsible=icon]:h-3.5 group-data-[collapsible=icon]:min-w-3.5 group-data-[collapsible=icon]:px-0">
                                     {unreadCount}
                                   </span>
                                 )}
@@ -533,49 +575,106 @@ export function Sidebar() {
             </SidebarGroup>
           );
         })}
+        {q && visibleSections.length === 0 && (
+          <p className="px-3 py-6 text-center text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            No results for “{search}”.
+          </p>
+        )}
       </SidebarContent>
 
-      <SidebarFooter className="gap-2 border-t border-sidebar-border p-2">
-        {/* User card */}
-        <div className="group-data-[collapsible=icon]:hidden flex items-center gap-2.5 rounded-md px-2 py-1.5">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs font-medium">{initials(user?.name)}</AvatarFallback>
+      {/* ─── FOOTER ─── */}
+      <SidebarFooter className="gap-2 p-2">
+        {/* EZ AI — light glass orb, floating + heartbeat, above the user card */}
+        <button
+          type="button"
+          onClick={() => showToast("EZ AI assistant is on the way ✨", "info")}
+          className="flex flex-col items-center gap-1.5 pb-1 pt-0.5 group-data-[collapsible=icon]:gap-0"
+        >
+          <div className="ez-orb-float-lg relative flex h-16 w-16 items-center justify-center group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11">
+            {/* ambient glow, beating */}
+            <div className="ez-orb-glow-beat absolute -inset-3 rounded-full bg-primary/40 blur-2xl" />
+            {/* contact shadow — grounds the sphere for a real 3D feel */}
+            <div className="absolute -bottom-1 left-1/2 h-3 w-9 -translate-x-1/2 rounded-full bg-[#1f2937]/25 blur-md" />
+            {/* sphere body */}
+            <div
+              className="ez-orb-heartbeat relative h-full w-full overflow-hidden rounded-full shadow-[0_18px_34px_-8px_rgba(59,130,246,0.55)] ring-1 ring-white/60"
+              style={{ background: "radial-gradient(circle at 30% 24%, #ffffff 0%, #eff6ff 16%, #bfdbfe 36%, #60a5fa 62%, #3b82f6 88%, #2563eb 100%)" }}
+            >
+              {/* under-shading — darker terminator opposite the highlight, for roundness */}
+              <div
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{ background: "radial-gradient(circle at 70% 78%, rgba(37,99,235,0.55) 0%, transparent 55%)" }}
+              />
+              {/* soft broad highlight */}
+              <div className="pointer-events-none absolute left-[8%] top-[6%] h-[50%] w-[50%] rounded-full bg-white/85 blur-[4px]" />
+              {/* sharp specular glint */}
+              <div className="pointer-events-none absolute left-[16%] top-[13%] h-[11%] w-[11%] rounded-full bg-white" />
+              {/* rotating sheen */}
+              <div
+                className="ez-orb-sheen pointer-events-none absolute inset-0 rounded-full opacity-50"
+                style={{ background: "conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.7) 40deg, transparent 90deg, transparent 360deg)" }}
+              />
+              <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/50" />
+            </div>
+          </div>
+          <span className="flex items-center gap-1.5 text-[11px] font-bold text-foreground group-data-[collapsible=icon]:hidden">
+            EZ AI
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-primary">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" /> Live
+            </span>
+          </span>
+        </button>
+
+        {/* User / workspace card */}
+        <div className="flex items-center gap-2.5 rounded-xl border border-sidebar-border bg-sidebar-accent/30 p-2 group-data-[collapsible=icon]:hidden">
+          <Avatar className="h-9 w-9">
+            <AvatarFallback className="bg-primary/10 text-[12px] font-semibold text-primary">{initials(user?.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <p className="text-sm font-medium text-foreground truncate">{user?.name ?? "—"}</p>
-            </div>
-            <p className="text-xs text-muted-foreground truncate">{user?.zoho_email || user?.email || "—"}</p>
+            <p className="truncate text-[13px] font-semibold text-foreground">{user?.name ?? "—"}</p>
+            <p className="truncate text-[10px] text-muted-foreground">{role.label} · {user?.zoho_email || user?.email || "—"}</p>
           </div>
-          <Badge variant="secondary" className={cn("text-[10px] font-medium border", role.className)}>
-            {role.label}
-          </Badge>
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+            <button
+              type="button"
+              onClick={() => logout()}
+              title="Logout"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut size={14} />
+            </button>
+          </div>
         </div>
 
-        {/* Theme toggle + Logout */}
-        <div className="flex gap-1.5 group-data-[collapsible=icon]:flex-col">
-          <Button
+        {/* Collapsed user */}
+        <div className="hidden flex-col items-center gap-1.5 group-data-[collapsible=icon]:flex">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-primary/10 text-[11px] font-semibold text-primary">{initials(user?.name)}</AvatarFallback>
+          </Avatar>
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex-1 justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-0"
             title={theme === "dark" ? "Light mode" : "Dark mode"}
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
           >
             {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            <span className="group-data-[collapsible=icon]:hidden">{theme === "dark" ? "Light" : "Dark"}</span>
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
             onClick={() => logout()}
-            className="flex-1 justify-center gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-0"
             title="Logout"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut size={14} />
-            <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-          </Button>
+          </button>
         </div>
       </SidebarFooter>
     </ShadcnSidebar>

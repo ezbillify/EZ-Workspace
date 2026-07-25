@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 import {
   ZOHO_API,
   buildZohoOAuthUrl,
@@ -112,7 +133,7 @@ export function stripHtml(html: string): string {
  * System prompt enforcing English-only output, professional accuracy,
  * and strict structured response format.
  */
-const AI_SYSTEM_PROMPT = `You are a highly accurate professional business AI assistant for Namaah — a corporate HR and operations platform.
+const AI_SYSTEM_PROMPT = `You are a highly accurate professional business AI assistant for EZ-Workspace — a corporate HR and operations platform.
 
 STRICT RULES — follow these without exception:
 1. LANGUAGE: You MUST respond ONLY in English. Regardless of what language the input email is written in, your output MUST always be in English only. Never output any other language.
@@ -215,7 +236,7 @@ export async function callGemma(
             "Content-Type": "application/json",
             Authorization: `Bearer ${openrouterKey}`,
             "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-            "X-Title": "Namaah Nexus",
+            "X-Title": "EZ-Workspace",
             "Accept-Language": "en",
           },
           body: JSON.stringify({
@@ -451,7 +472,7 @@ export function buildActivationEmailHtml(name: string, zohoEmail: string): strin
                 <span style="display:inline-block;width:34px;height:34px;line-height:34px;text-align:center;background:#ffffff;color:#0b0f17;font-weight:800;font-size:16px;border-radius:9px;">N</span>
               </td>
               <td style="vertical-align:middle;padding-left:12px;">
-                <div style="color:#ffffff;font-size:15px;font-weight:700;letter-spacing:-0.01em;">Namaah Nexus</div>
+                <div style="color:#ffffff;font-size:15px;font-weight:700;letter-spacing:-0.01em;">EZ-Workspace</div>
                 <div style="color:#8b95a7;font-size:10px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;">Enterprise Operations Panel</div>
               </td>
             </tr>
@@ -463,7 +484,7 @@ export function buildActivationEmailHtml(name: string, zohoEmail: string): strin
           <div style="display:inline-block;background:#10b98115;color:#059669;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:6px 12px;border-radius:999px;">Mailbox Activated</div>
           <h1 style="margin:16px 0 8px;font-size:21px;font-weight:800;letter-spacing:-0.02em;color:#0f172a;">Your Zoho mailbox is now active</h1>
           <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#475569;">
-            Hi ${firstName}, your company mailbox has been activated and single sign-on (SAML) is configured for your account. You can now send and receive company email directly inside Namaah Nexus.
+            Hi ${firstName}, your company mailbox has been activated and single sign-on (SAML) is configured for your account. You can now send and receive company email directly inside EZ-Workspace.
           </p>
 
           <!-- Mailbox chip -->
@@ -491,7 +512,7 @@ export function buildActivationEmailHtml(name: string, zohoEmail: string): strin
         </td></tr>
       </table>
 
-      <p style="margin:16px 0 0;font-size:11px;color:#94a3b8;">© Namaah Nexus · Automated security notification</p>
+      <p style="margin:16px 0 0;font-size:11px;color:#94a3b8;">© EZ-Workspace · Automated security notification</p>
     </td></tr>
   </table>
 </body></html>`;

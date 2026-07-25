@@ -1,0 +1,78 @@
+[
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/font_inter_extrabold.ttf.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/font/inter_extrabold.ttf"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/font_inter_regular.ttf.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/font/inter_regular.ttf"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/drawable-xxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/drawable-xxhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/font_inter_bold.ttf.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/font/inter_bold.ttf"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/drawable-nodpi_logo.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/drawable-nodpi/logo.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/drawable-mdpi_ic_launcher_foreground.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/drawable-mdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/font_inter_semibold.ttf.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/font/inter_semibold.ttf"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/drawable-hdpi_ic_launcher_foreground.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/drawable-hdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/font_inter.xml.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/font/inter.xml"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/font_inter_medium.ttf.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/font/inter_medium.ttf"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/font_inter_black.ttf.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/font/inter_black.ttf"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/drawable-xhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/drawable-xhdpi/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.ezbillify.ezworkspace.app-debug-4:/drawable-xxxhdpi_ic_launcher_foreground.png.flat",
+        "source": "com.ezbillify.ezworkspace.app-main-6:/drawable-xxxhdpi/ic_launcher_foreground.png"
+    }
+]

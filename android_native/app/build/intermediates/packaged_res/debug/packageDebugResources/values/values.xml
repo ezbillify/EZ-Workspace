@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#1F2937</color>
+    <string name="app_name">EZ-Workspace</string>
+    <style name="Theme.EZWorkspace" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">#EBF1F9</item>
+    </style>
+</resources>

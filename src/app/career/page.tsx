@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -143,7 +164,7 @@ export default function CareerPortal() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-theme-primary flex items-center justify-center font-black text-lg">N</div>
-            <span className="text-xl font-black tracking-tight">Namaah <span className="text-theme-primary">Careers</span></span>
+            <span className="text-xl font-black tracking-tight">EZ-Workspace <span className="text-theme-primary">Careers</span></span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-bold text-white/60">
             <a href="#" className="hover:text-theme-primary transition-colors">Our Culture</a>
@@ -278,7 +299,7 @@ export default function CareerPortal() {
           <div className="col-span-1 md:col-span-2 space-y-6">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-lg bg-theme-primary flex items-center justify-center font-black">N</div>
-              <span className="text-lg font-black">Namaah Nexus</span>
+              <span className="text-lg font-black">EZ-Workspace</span>
             </div>
             <p className="text-white/40 max-w-sm text-sm font-medium leading-relaxed">
               Pioneering the next generation of autonomous business intelligence. Build the tools that power the global financial ecosystem.
@@ -311,7 +332,7 @@ export default function CareerPortal() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">© 2026 Namaah Tech. All rights reserved.</p>
+          <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">© 2026 EZ-Workspace Tech. All rights reserved.</p>
           <p className="text-[10px] font-bold text-theme-primary uppercase tracking-widest">Gemma 4 Recruitment Intelligence Active</p>
         </div>
       </footer>

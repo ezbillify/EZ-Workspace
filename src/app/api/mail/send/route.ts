@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { zohoPost, zohoGet } from "@/lib/zoho-mail";
@@ -111,7 +132,7 @@ export async function POST(req: NextRequest) {
     // No provisioned account and not in admin's authorized list — fall back to admin sender + banner.
     bodyNotice = `
 <div style="font-family: sans-serif; font-size: 11px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px; max-width: 600px;">
-  This message was sent by <strong>${fromName || "an employee"}</strong> (${fromAddress}) via Namaah Nexus.
+  This message was sent by <strong>${fromName || "an employee"}</strong> (${fromAddress}) via EZ-Workspace.
 </div>`;
   }
 
@@ -138,7 +159,7 @@ export async function POST(req: NextRequest) {
 
     const fallbackSection = `
 <div style="margin-top: 24px; padding: 16px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-radius: 8px; font-family: sans-serif;">
-  <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #64748b;">Cloud Attachments (via Namaah Secure Storage)</p>
+  <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #64748b;">Cloud Attachments (via EZ-Workspace Secure Storage)</p>
   <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #1e293b; line-height: 1.6;">
     ${linksHtml}
   </ul>
@@ -225,7 +246,7 @@ export async function POST(req: NextRequest) {
     if (!bodyNotice && fromAddress) {
       bodyNotice = `
 <div style="font-family: sans-serif; font-size: 11px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px; max-width: 600px;">
-  This message was sent by <strong>${fromName || "an employee"}</strong> (${fromAddress}) via Namaah Nexus.
+  This message was sent by <strong>${fromName || "an employee"}</strong> (${fromAddress}) via EZ-Workspace.
 </div>`;
       payload.content = bodyNotice + finalContent;
     }
@@ -242,7 +263,7 @@ export async function POST(req: NextRequest) {
       // Add sender notice so recipient knows who sent this (Zoho API has no replyTo field)
       const fallbackNotice = fromAddress ? `
 <div style="font-family: sans-serif; font-size: 11px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px; max-width: 600px;">
-  This message was sent by <strong>${fromName || "an employee"}</strong> (${fromAddress}) via Namaah Nexus.
+  This message was sent by <strong>${fromName || "an employee"}</strong> (${fromAddress}) via EZ-Workspace.
 </div>` : "";
       payload.content = fallbackNotice + finalContent;
       try {
@@ -310,7 +331,7 @@ export async function POST(req: NextRequest) {
       folder:          "Sent",
       subject:         subject,
       from_address:    fromAddress,
-      from_name:       fromName || "Namaah",
+      from_name:       fromName || "EZ-Workspace",
       to_address:      recipientEmails,
       cc_address:      ccEmails,
       preview:         content.slice(0, 150),
@@ -346,7 +367,7 @@ export async function POST(req: NextRequest) {
             folder:          "Inbox",
             subject:         subject,
             from_address:    fromAddress,
-            from_name:       fromName || "Namaah",
+            from_name:       fromName || "EZ-Workspace",
             to_address:      recipientEmails,
             cc_address:      ccEmails,
             preview:         content.slice(0, 150),

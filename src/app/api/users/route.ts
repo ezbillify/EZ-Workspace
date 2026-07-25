@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2026 EZBillify Ventures Pvt Ltd. All rights reserved.
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+ * 
+ * WARNING & LIABILITY DISCLAIMER:
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * IMPORTANT: WHOEVER COPIES, REDISTRIBUTES, OR USES THIS SOFTWARE MUST KNOW THAT
+ * UNDER NO CIRCUMSTANCES CAN THEY RECOVER DAMAGES, LOSSES, OR LIABILITIES
+ * ENCOUNTERED FROM THE USE, MODIFICATION, OR DISTRIBUTION OF THIS SOFTWARE.
+ */
+
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import nodemailer from "nodemailer";
@@ -269,18 +290,18 @@ export async function POST(req: Request) {
         : "";
 
       const mailOptions = {
-        from: `"${config.company_name || "Namaah Nexus"}" <${config.smtp_user}>`,
+        from: `"${config.company_name || "EZ-Workspace"}" <${config.smtp_user}>`,
         to: email,
-        subject: `Welcome to ${config.company_name || "Namaah Nexus"} - Onboarding Initiated`,
+        subject: `Welcome to ${config.company_name || "EZ-Workspace"} - Onboarding Initiated`,
         html: `
           <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
             <div style="background-color: #0f172a; color: #ffffff; padding: 32px 20px; text-align: center;">
-              <h1 style="margin:0; letter-spacing: 4px; font-size: 24px; font-weight: 800; text-transform: uppercase;">${config.company_name || "NAMAAH PULSE"}</h1>
+              <h1 style="margin:0; letter-spacing: 4px; font-size: 24px; font-weight: 800; text-transform: uppercase;">${config.company_name || "EZ-WORKSPACE PULSE"}</h1>
               <p style="margin-top: 8px; opacity: 0.8; font-size: 14px;">Onboarding Portal & Identity Management</p>
             </div>
             <div style="padding: 40px; color: #1e293b; line-height: 1.6;">
               <h2 style="margin-top: 0; font-size: 20px; font-weight: 700;">Welcome Onboard, ${name}!</h2>
-              <p>Your professional account at <b>${config.company_name || "Namaah Nexus"}</b> has been successfully initialized. Please follow these step-by-step instructions to connect to your workspace:</p>
+              <p>Your professional account at <b>${config.company_name || "EZ-Workspace"}</b> has been successfully initialized. Please follow these step-by-step instructions to connect to your workspace:</p>
               
               <div style="margin: 24px 0; font-size: 13px;">
                 <div style="margin-bottom: 16px; padding: 16px; border-left: 4px solid #3b82f6; background-color: #f0f9ff; border-radius: 8px;">
@@ -314,7 +335,7 @@ export async function POST(req: Request) {
               
               <div style="margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 24px;">
                 <p style="margin: 0; font-weight: 700; color: #0f172a;">Identity Management System</p>
-                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 12px;">Automated Onboarding Engine · ${config.company_name || "Namaah Nexus"}</p>
+                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 12px;">Automated Onboarding Engine · ${config.company_name || "EZ-Workspace"}</p>
               </div>
             </div>
           </div>
